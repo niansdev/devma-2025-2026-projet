@@ -24,7 +24,7 @@ La structure du projet a été réorganisée afin d'isoler la logique purement K
 
 ```text
 devma-2025-2026-projet-master/
-├── app/                            # Application Android Native (Jetpack Compose UI)
+├── app/                             # Application Android Native (Jetpack Compose UI)
 └── shared/                          # Module Partagé KMP
     ├── build.gradle.kts
     └── src/
