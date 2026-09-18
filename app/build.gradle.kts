@@ -66,6 +66,15 @@ android {
 
 dependencies {
   implementation(project(":shared")) // <-- Intégration du module partagé
+// Dépendance kotlinx-datetime pour le module Android
+  implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0") // Ajustez la version selon votre projet
+
+    // KTX extension pour 'by viewModels()' dans ComponentActivity
+    implementation("androidx.activity:activity-ktx:1.8.2")
+
+    // ViewModel Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
 
   // Compose BOM & UI
   implementation(platform(libs.androidx.compose.bom))

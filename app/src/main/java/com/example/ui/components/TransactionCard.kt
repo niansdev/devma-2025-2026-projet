@@ -1,10 +1,8 @@
 package com.example.ui.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -36,7 +33,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.R
 import com.example.model.Transaction
-import com.example.ui.theme.DarkCardBadge
 import com.example.ui.theme.DarkOutline
 import com.example.ui.theme.DarkSurfaceVariant
 import com.example.ui.theme.DarkTextSecondary
@@ -61,13 +57,13 @@ fun TransactionCard(
     onDelete: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val categoryName = stringResource(transaction.category.labelResId)
+    val categoryLabel = transaction.category.displayName
     val todayText = stringResource(R.string.date_today)
     val yesterdayText = stringResource(R.string.date_yesterday)
     val currencyFcfa = stringResource(R.string.currency_fcfa)
 
-    val formattedDate = remember(transaction.date, todayText, yesterdayText) {
-        formatRelativeDate(transaction.date, todayText, yesterdayText)
+    val formattedDate = remember(transaction.dateMillis, todayText, yesterdayText) {
+        formatRelativeDate(transaction.dateMillis, todayText, yesterdayText)
     }
 
     val formattedAmount = remember(transaction.amount, currencyFcfa) {
@@ -93,23 +89,7 @@ fun TransactionCard(
                 .padding(horizontal = 16.dp, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Badge d'icône/emoji avec fond violet sombre contrasté
-            Box(
-                modifier = Modifier
-                    .size(46.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(DarkCardBadge),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = transaction.category.emoji,
-                    fontSize = 22.sp
-                )
-            }
-
-            Spacer(modifier = Modifier.width(14.dp))
-
-            // Intitulé en Blanc pur et métadonnées en Gris clair hautement lisible
+            // Intitulé et métadonnées
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -134,7 +114,7 @@ fun TransactionCard(
                 }
                 Spacer(modifier = Modifier.height(3.dp))
                 Text(
-                    text = "$categoryName • $formattedDate",
+                    text = "$categoryLabel • $formattedDate",
                     style = MaterialTheme.typography.bodyMedium.copy(
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium
@@ -145,7 +125,7 @@ fun TransactionCard(
 
             Spacer(modifier = Modifier.width(8.dp))
 
-            // Montant en Blanc Pur et bouton de suppression
+            // Montant et bouton de suppression
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(2.dp)
