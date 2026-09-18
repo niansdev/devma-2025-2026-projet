@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -60,7 +59,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -69,17 +67,21 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.model.Category
 import com.example.model.Transaction
+import com.example.model.TransactionType
+import com.example.util.generateUUID
+import com.example.util.getCurrentTimeMillis
 import com.example.viewmodel.EcoBudgetUiState
 import com.example.viewmodel.EcoBudgetViewModel
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 import java.text.NumberFormat
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EcoBudgetScreen(
-    viewModel: EcoBudgetViewModel = viewModel()
+    viewModel: EcoBudgetViewModel = viewModel { EcoBudgetViewModel() }
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -109,39 +111,51 @@ fun EcoBudgetScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            // 1. Barres de navigation des mois
+            // 1. Barre de navigation du mois
             MonthSelectorSection(
-                displayLabel = uiState.currentMonth.displayLabel,
-                onPreviousMonth = { viewModel.previousMonth() },
-                onNextMonth = { viewModel.nextMonth() },
-                onCurrentMonth = { viewModel.goToCurrentMonth() }
+                displayLabel = uiState.selectedYearMonth.displayLabel,
+                onPreviousMonth = { viewModel.onPreviousMonth() },
+                onNextMonth = { viewModel.onNextMonth() },
+                onCurrentMonth = { viewModel.onNextMonth() }
             )
 
-            // 2. Carte de résumé du budget
+            // 2. Carte de résumé financier (Revenus, Dépenses, Solde)
             BudgetSummaryCard(uiState = uiState)
 
-            // 3. Barre de filtres par catégories
-            CategoryFilterBar(
-                selectedCategories = uiState.selectedCategories,
-                onCategoryToggle = { category -> viewModel.toggleCategory(category) },
-                onClearFilter = { viewModel.clearCategoryFilter() }
-            )
-
-            // 4. Liste des transactions
+            // 3. Liste des transactions filtrées pour le mois sélectionné
             TransactionListSection(
-                transactions = uiState.filteredTransactions,
+                transactions = uiState.transactions,
                 onEditTransaction = { viewModel.openEditDialog(it) },
                 onDeleteTransaction = { viewModel.deleteTransaction(it.id) }
             )
         }
 
-        // Dialogue d'enregistrement / d'édition
+        // Dialogue d'enregistrement / édition
         if (uiState.isAddDialogOpen) {
             AddEditTransactionDialog(
                 editingTransaction = uiState.editingTransaction,
                 onDismiss = { viewModel.dismissDialog() },
-                onSave = { title, amount, category ->
-                    viewModel.saveTransaction(title, amount, category)
+                onSave = { title, amount, category, type ->
+                    val transactionToSave = uiState.editingTransaction?.copy(
+                        title = title,
+                        amount = amount,
+                        category = category,
+                        type = type
+                    ) ?: Transaction(
+                        id = generateUUID(), // Utilisation de la fonction importée depuis com.example.util
+                        title = title,
+                        amount = amount,
+                        type = type,
+                        category = category,
+                        dateMillis = getCurrentTimeMillis() // Utilisation de la fonction KMP
+                    )
+
+                    if (uiState.editingTransaction != null) {
+                        viewModel.updateTransaction(transactionToSave)
+                    } else {
+                        viewModel.addTransaction(transactionToSave)
+                    }
+                    viewModel.dismissDialog()
                 }
             )
         }
@@ -206,133 +220,44 @@ private fun BudgetSummaryCard(uiState: EcoBudgetUiState) {
             ) {
                 Column {
                     Text(
-                        text = "Budget Total",
+                        text = "Revenus",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = currencyFormatter.format(uiState.monthlyBudget),
+                        text = currencyFormatter.format(uiState.totalIncome),
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = "Dépenses",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = currencyFormatter.format(uiState.totalExpense),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.error
                     )
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Reste à dépenser",
+                        text = "Solde",
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        text = currencyFormatter.format(uiState.remainingBudget),
+                        text = currencyFormatter.format(uiState.balance),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (uiState.remainingBudget > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                        color = if (uiState.balance >= 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            LinearProgressIndicator(
-                progress = { uiState.budgetUsageRatio },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(8.dp)
-                    .clip(RoundedCornerShape(4.dp)),
-                color = if (uiState.budgetUsageRatio >= 1.0f) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Dépensé: ${currencyFormatter.format(uiState.totalSpent)}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Text(
-                    text = "${uiState.budgetUsagePercentage}%",
-                    style = MaterialTheme.typography.bodySmall,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            // Bandeau informatif si des filtres par catégorie sont appliqués
-            AnimatedVisibility(visible = !uiState.isAllCategoriesSelected) {
-                val categoryNames = uiState.selectedCategories.joinToString(", ") { "${it.emoji} ${it.displayName}" }
-                Column {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Surface(
-                        color = MaterialTheme.colorScheme.secondaryContainer,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Filtre ($categoryNames):",
-                                style = MaterialTheme.typography.bodySmall,
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = currencyFormatter.format(uiState.categorySpent),
-                                style = MaterialTheme.typography.bodySmall,
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun CategoryFilterBar(
-    selectedCategories: Set<Category>,
-    onCategoryToggle: (Category) -> Unit,
-    onClearFilter: () -> Unit
-) {
-    LazyRow(
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 8.dp)
-    ) {
-        item {
-            FilterChip(
-                selected = selectedCategories.isEmpty(),
-                onClick = onClearFilter,
-                label = { Text("Tous") },
-                leadingIcon = if (selectedCategories.isEmpty()) {
-                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                } else null,
-                colors = FilterChipDefaults.filterChipColors(
-                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        }
-
-        items(Category.entries.toTypedArray()) { category ->
-            val isSelected = selectedCategories.contains(category)
-            FilterChip(
-                selected = isSelected,
-                onClick = { onCategoryToggle(category) },
-                label = { Text("${category.emoji} ${category.displayName}") },
-                leadingIcon = if (isSelected) {
-                    { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
-                } else null
-            )
         }
     }
 }
@@ -351,7 +276,7 @@ private fun TransactionListSection(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Aucune transaction pour ce filtre.",
+                text = "Aucune transaction enregistrée pour ce mois.",
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
@@ -381,7 +306,12 @@ private fun TransactionItemRow(
     onDelete: () -> Unit
 ) {
     val currencyFormatter = remember { NumberFormat.getCurrencyInstance(Locale.FRANCE) }
-    val dateFormatter = remember { SimpleDateFormat("dd MMM yyyy", Locale.FRANCE) }
+
+    val formattedDate = remember(transaction.dateMillis) {
+        val ldt = Instant.fromEpochMilliseconds(transaction.dateMillis)
+            .toLocalDateTime(TimeZone.currentSystemDefault())
+        "${ldt.dayOfMonth.toString().padStart(2, '0')}/${ldt.monthNumber.toString().padStart(2, '0')}/${ldt.year}"
+    }
 
     Card(
         modifier = Modifier
@@ -395,7 +325,6 @@ private fun TransactionItemRow(
                 .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icône de la catégorie
             Box(
                 modifier = Modifier
                     .size(40.dp)
@@ -408,7 +337,6 @@ private fun TransactionItemRow(
 
             Spacer(modifier = Modifier.width(12.dp))
 
-            // Détails du titre et de la date
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = transaction.title,
@@ -418,21 +346,24 @@ private fun TransactionItemRow(
                     overflow = TextOverflow.Ellipsis
                 )
                 Text(
-                    text = "${transaction.category.displayName} • ${transaction.date}",
+                    text = "${transaction.category.displayName} • $formattedDate",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Montant
+            val isIncome = transaction.type == TransactionType.INCOME
+            val amountPrefix = if (isIncome) "+" else "-"
+            val amountColor = if (isIncome) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+
             Text(
-                text = currencyFormatter.format(transaction.amount),
+                text = "$amountPrefix${currencyFormatter.format(transaction.amount)}",
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
+                color = amountColor,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
 
-            // Actions Édition & Suppression
             IconButton(onClick = onEdit, modifier = Modifier.size(32.dp)) {
                 Icon(
                     imageVector = Icons.Default.Edit,
@@ -458,11 +389,12 @@ private fun TransactionItemRow(
 private fun AddEditTransactionDialog(
     editingTransaction: Transaction?,
     onDismiss: () -> Unit,
-    onSave: (title: String, amount: Double, category: Category) -> Unit
+    onSave: (title: String, amount: Double, category: Category, type: TransactionType) -> Unit
 ) {
     var title by remember { mutableStateOf(editingTransaction?.title ?: "") }
     var amountText by remember { mutableStateOf(editingTransaction?.amount?.toString() ?: "") }
     var selectedCategory by remember { mutableStateOf(editingTransaction?.category ?: Category.FOOD) }
+    var selectedType by remember { mutableStateOf(editingTransaction?.type ?: TransactionType.EXPENSE) }
     var expandedDropdown by remember { mutableStateOf(false) }
 
     val isEditing = editingTransaction != null
@@ -493,7 +425,24 @@ private fun AddEditTransactionDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                // Menu déroulant des catégories
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    FilterChip(
+                        selected = selectedType == TransactionType.EXPENSE,
+                        onClick = { selectedType = TransactionType.EXPENSE },
+                        label = { Text("Dépense") },
+                        modifier = Modifier.weight(1f)
+                    )
+                    FilterChip(
+                        selected = selectedType == TransactionType.INCOME,
+                        onClick = { selectedType = TransactionType.INCOME },
+                        label = { Text("Revenu") },
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
                 ExposedDropdownMenuBox(
                     expanded = expandedDropdown,
                     onExpandedChange = { expandedDropdown = !expandedDropdown }
@@ -531,7 +480,7 @@ private fun AddEditTransactionDialog(
                 onClick = {
                     val amount = amountText.toDoubleOrNull() ?: 0.0
                     if (title.isNotBlank() && amount > 0.0) {
-                        onSave(title, amount, selectedCategory)
+                        onSave(title, amount, selectedCategory, selectedType)
                     }
                 }
             ) {
