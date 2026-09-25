@@ -69,9 +69,9 @@ Chaque composant migré vers `commonMain` a fait l'objet d'un audit et d'un refa
 
 ### D. Dépôt de Données `TransactionRepositorykt`
 * **Emplacement cible :** `shared/src/commonMain/kotlin/com/example/data/repository/TransactionRepository.kt`
-* **🔴 *Problème rencontré :** L'implémentation initiale du repository était liée à l'environnement Android et à des types ou comportements spécifiques à la plateforme, ce qui empêchait son utilisation directe dans `commonMain`. Cette dépendance risquait également de coupler la logique du `ViewModel` à une implémentation exclusivement Android.
-* **🟢 Choix technique appliqué :** Déplacement du contrat `TransactionRepository` dans `commonMain` afin de fournir une abstraction commune aux différentes plateformes. Le ViewModel dépend désormais du contrat du repository plutôt que d'une implémentation spécifique à Android. Les flux de données reposent sur les API multiplateformes `Flow`, `StateFlow` et `MutableStateFlow` fournies par `kotlinx-coroutines-core`.
-* **🔵 Justification :** Cette séparation permet de découpler la logique métier de l'interface utilisateur et des API Android. Le même contrat `TransactionRepository` peut ainsi être consommé par Android et iOS, tandis que les implémentations concrètes de la source de données peuvent évoluer indépendamment selon la plateforme. La logique métier reste ainsi centralisée dans `commonMain` et réutilisable dans l'architecture KMP.
+* **🔴 *Problème rencontré :** Dépendances et comportements spécifiques à Android incompatibles avec `commonMain`.
+* **🟢 Choix technique appliqué :** Déplacement du contrat TransactionRepository dans commonMain avec `Flow`, `StateFlow` et `MutableStateFlow` fournies par `kotlinx-coroutines-core`.
+* **🔵 Justification :** Le repository devient multiplateforme et découplé des API Android..
 
 ---
 
