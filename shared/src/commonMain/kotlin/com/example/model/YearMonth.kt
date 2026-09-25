@@ -7,11 +7,8 @@ import kotlinx.datetime.toLocalDateTime
 
 data class YearMonth(
     val year: Int,
-    val month: Int // 1 à 12
+    val month: Int
 ) {
-    /**
-     * Libellé formaté pour l'affichage (ex: "Janvier 2026")
-     */
     val displayLabel: String
         get() {
             val monthName = when (month) {
@@ -29,26 +26,38 @@ data class YearMonth(
                 12 -> "Décembre"
                 else -> ""
             }
+
             return "$monthName $year"
         }
 
-    /**
-     * Vérifie si un timestamp (en millisecondes) appartient à ce mois et cette année.
-     */
     fun containsTimestamp(timestampMillis: Long): Boolean {
         val instant = Instant.fromEpochMilliseconds(timestampMillis)
-        val localDateTime = instant.toLocalDateTime(TimeZone.currentSystemDefault())
-        return localDateTime.year == this.year && localDateTime.monthNumber == this.month
+        val localDateTime =
+            instant.toLocalDateTime(TimeZone.currentSystemDefault())
+
+        return localDateTime.year == year &&
+                localDateTime.monthNumber == month
     }
 
-    fun previous(): YearMonth = if (month == 1) YearMonth(year - 1, 12) else YearMonth(year, month - 1)
-    fun next(): YearMonth = if (month == 12) YearMonth(year + 1, 1) else YearMonth(year, month + 1)
+    fun previous(): YearMonth =
+        if (month == 1) YearMonth(year - 1, 12)
+        else YearMonth(year, month - 1)
+
+    fun next(): YearMonth =
+        if (month == 12) YearMonth(year + 1, 1)
+        else YearMonth(year, month + 1)
 
     companion object {
         fun now(): YearMonth {
-            val local = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())
-            return YearMonth(local.year, local.monthNumber)
+            val local = Clock.System.now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+
+            return YearMonth(
+                local.year,
+                local.monthNumber
+            )
         }
+
         fun current(): YearMonth = now()
     }
 }

@@ -5,7 +5,6 @@ plugins {
 
 kotlin {
 
-    // Cible Android
     androidTarget {
         compilerOptions {
             jvmTarget.set(
@@ -14,7 +13,6 @@ kotlin {
         }
     }
 
-    // Cibles iOS
     listOf(
         iosX64(),
         iosArm64(),
@@ -26,19 +24,18 @@ kotlin {
         }
     }
 
-    // Dépendances communes
     sourceSets {
         commonMain.dependencies {
-            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+            implementation(libs.kotlinx.coroutines.core)
             implementation(libs.kotlinx.datetime)
-            implementation("org.jetbrains.androidx.lifecycle:lifecycle-viewmodel:2.8.0")
+            implementation(libs.androidx.lifecycle.viewmodel)
         }
     }
 }
 
 android {
     namespace = "com.example.shared"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         minSdk = 24

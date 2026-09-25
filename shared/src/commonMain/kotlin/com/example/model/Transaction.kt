@@ -17,7 +17,6 @@ data class Transaction(
     val dateMillis: Long,
     val note: String? = null
 ) {
-    // Compatibilité avec l'ancien code : conversion du timestamp en Instant
     val date: Instant
         get() = Instant.fromEpochMilliseconds(dateMillis)
 }
