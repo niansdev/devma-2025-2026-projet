@@ -69,7 +69,7 @@ Chaque composant migré vers `commonMain` a fait l'objet d'un audit et d'un refa
 
 ### D. Dépôt de Données `TransactionRepositorykt`
 * **Emplacement cible :** `shared/src/commonMain/kotlin/com/example/data/repository/TransactionRepository.kt`
-* **🔴 *Problème rencontré :** Dépendances et comportements spécifiques à Android incompatibles avec `commonMain`.
+* **🔴 Problème rencontré :** Dépendances et comportements spécifiques à Android incompatibles avec `commonMain`.
 * **🟢 Choix technique appliqué :** Déplacement du contrat TransactionRepository dans commonMain avec `Flow`, `StateFlow` et `MutableStateFlow` fournies par `kotlinx-coroutines-core`.
 * **🔵 Justification :** Le repository devient multiplateforme et découplé des API Android..
 
