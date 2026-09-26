@@ -67,11 +67,11 @@ import java.util.Locale
 /**
  * Écran principal d'EcoBudget :
  * - Navigation mensuelle réactive.
- * - Suivi précis du budget restant en FCFA pour le mois actif.
- * - Sélection d'une ou plusieurs catégories simultanément.
- * - Modification d'une dépense au clic direct sur sa carte.
+ * - Suivi du budget restant en FCFA.
+ * - Sélection d'une ou plusieurs catégories.
+ * - Modification d'une dépense.
  * - Suppression d'une dépense.
- * - Internationalisation complète via strings.xml.
+ * - Internationalisation via strings.xml.
  */
 @Composable
 fun EcoBudgetScreen(
@@ -81,9 +81,9 @@ fun EcoBudgetScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val formatFcfa = remember {
-        val nf = NumberFormat.getNumberInstance(Locale.FRENCH)
-        nf.maximumFractionDigits = 0
-        nf
+        NumberFormat.getNumberInstance(Locale.FRENCH).apply {
+            maximumFractionDigits = 0
+        }
     }
 
     Scaffold(
@@ -111,14 +111,12 @@ fun EcoBudgetScreen(
             }
         }
     ) { innerPadding ->
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .windowInsetsPadding(WindowInsets.statusBars)
         ) {
-
             EcoBudgetCleanHeader()
 
             LazyColumn(
@@ -131,8 +129,7 @@ fun EcoBudgetScreen(
                     bottom = 88.dp
                 )
             ) {
-
-                // Section 1 : Navigateur mensuel
+                // Section 1 : Navigation mensuelle
                 item(key = "month_navigator_section") {
                     MonthNavigatorBar(
                         currentMonth = uiState.currentMonth,
@@ -148,7 +145,7 @@ fun EcoBudgetScreen(
                     )
                 }
 
-                // Section 2 : Carte budget
+                // Section 2 : Vue d'ensemble du budget
                 item(key = "budget_overview_hero") {
                     EcoBudgetOverviewCard(
                         remainingBudget = uiState.remainingBudget,
@@ -159,7 +156,7 @@ fun EcoBudgetScreen(
                     )
                 }
 
-                // Section 3 : Filtre des catégories
+                // Section 3 : Filtre multicatégories
                 item(key = "category_multi_filter_row") {
                     CategoryMultiFilterLazyRow(
                         selectedCategories = uiState.selectedCategories,
@@ -173,29 +170,21 @@ fun EcoBudgetScreen(
                     )
                 }
 
-                // Section 4 : Résumé des catégories
+                // Section 4 : Résumé des catégories sélectionnées
                 item(key = "category_spent_summary") {
-
                     val summaryTitle = when {
-
-                        uiState.isAllCategoriesSelected ->
-                            stringResource(
-                                R.string.all_categories_summary
-                            )
+                        uiState.isAllCategoriesSelected -> {
+                            stringResource(R.string.all_categories_summary)
+                        }
 
                         uiState.selectedCategories.size == 1 -> {
-                            val cat =
-                                uiState.selectedCategories.first()
-
-                            "${cat.emoji} ${cat.displayName}"
+                            val cat = uiState.selectedCategories.first()
+                            "${cat.emoji} ${cat.label}"
                         }
 
                         else -> {
-                            val emojis =
-                                uiState.selectedCategories
-                                    .joinToString(" ") {
-                                        it.emoji
-                                    }
+                            val emojis = uiState.selectedCategories
+                                .joinToString(" ") { it.emoji }
 
                             stringResource(
                                 R.string.multiple_categories_selected_format,
@@ -221,7 +210,6 @@ fun EcoBudgetScreen(
                         color = DarkSurfaceVariant,
                         shape = RoundedCornerShape(16.dp)
                     ) {
-
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -234,24 +222,18 @@ fun EcoBudgetScreen(
                             verticalAlignment =
                                 Alignment.CenterVertically
                         ) {
-
                             Column(
                                 modifier = Modifier.weight(
                                     1f,
                                     fill = false
                                 )
                             ) {
-
                                 Text(
                                     text = summaryTitle,
-                                    style = MaterialTheme
-                                        .typography
-                                        .labelMedium
-                                        .copy(
-                                            fontSize = 13.sp,
-                                            fontWeight =
-                                                FontWeight.SemiBold
-                                        ),
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
                                     color = Color.White,
                                     maxLines = 1
                                 )
@@ -266,10 +248,9 @@ fun EcoBudgetScreen(
                                         uiState.filteredTransactions.size,
                                         uiState.currentMonth.displayLabel
                                     ),
-                                    style = MaterialTheme
-                                        .typography
-                                        .labelSmall
-                                        .copy(fontSize = 11.sp),
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = 11.sp
+                                    ),
                                     color = DarkTextSecondary
                                 )
                             }
@@ -279,18 +260,11 @@ fun EcoBudgetScreen(
                             )
 
                             Text(
-                                text = "${
-                                    formatFcfa.format(
-                                        uiState.categorySpent
-                                    )
-                                } $currencyFcfa",
-                                style = MaterialTheme
-                                    .typography
-                                    .titleMedium
-                                    .copy(
-                                        fontSize = 16.sp,
-                                        fontWeight = FontWeight.Bold
-                                    ),
+                                text = "${formatFcfa.format(uiState.categorySpent)} $currencyFcfa",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Bold
+                                ),
                                 color = VioletPrimaryLight,
                                 modifier = Modifier.testTag(
                                     "category_spent_amount"
@@ -307,13 +281,10 @@ fun EcoBudgetScreen(
                             R.string.transactions_detail_title_format,
                             uiState.currentMonth.displayLabel
                         ),
-                        style = MaterialTheme
-                            .typography
-                            .titleMedium
-                            .copy(
-                                fontSize = 15.sp,
-                                fontWeight = FontWeight.Bold
-                            ),
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
                         color = Color.White,
                         modifier = Modifier
                             .fillMaxWidth()
@@ -324,9 +295,8 @@ fun EcoBudgetScreen(
                     )
                 }
 
-                // Section 6 : Transactions
+                // Section 6 : Liste des transactions
                 if (uiState.filteredTransactions.isEmpty()) {
-
                     item(key = "empty_transactions_state") {
                         EmptyTransactionsView(
                             isAllSelected =
@@ -335,25 +305,18 @@ fun EcoBudgetScreen(
                                 uiState.currentMonth.displayLabel
                         )
                     }
-
                 } else {
-
                     items(
                         items = uiState.filteredTransactions,
                         key = { it.id }
                     ) { transaction ->
-
                         TransactionCard(
                             transaction = transaction,
                             onClick = {
-                                viewModel.openEditDialog(
-                                    transaction
-                                )
+                                viewModel.openEditDialog(transaction)
                             },
                             onDelete = {
-                                viewModel.deleteTransaction(
-                                    transaction.id
-                                )
+                                viewModel.deleteTransaction(transaction.id)
                             }
                         )
                     }
@@ -362,17 +325,13 @@ fun EcoBudgetScreen(
         }
     }
 
-    // Dialogue ajout / modification
+    // Dialogue d'ajout ou de modification
     if (uiState.isAddDialogOpen) {
-
         AddTransactionDialog(
-            initialTransaction =
-                uiState.editingTransaction,
-
+            initialTransaction = uiState.editingTransaction,
             onDismissRequest = {
                 viewModel.dismissDialog()
             },
-
             onConfirm = { title, amount, category ->
                 viewModel.saveTransaction(
                     title,
@@ -385,11 +344,10 @@ fun EcoBudgetScreen(
 }
 
 /**
- * En-tête supérieur.
+ * En-tête supérieur de l'application.
  */
 @Composable
 private fun EcoBudgetCleanHeader() {
-
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -398,40 +356,31 @@ private fun EcoBudgetCleanHeader() {
                 vertical = 12.dp
             )
     ) {
-
         Text(
             text = stringResource(R.string.app_subtitle),
-            style = MaterialTheme
-                .typography
-                .labelSmall
-                .copy(
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.2.sp
-                ),
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.2.sp
+            ),
             color = VioletPrimaryLight
         )
 
-        Spacer(
-            modifier = Modifier.height(2.dp)
-        )
+        Spacer(modifier = Modifier.height(2.dp))
 
         Text(
             text = stringResource(R.string.app_name),
-            style = MaterialTheme
-                .typography
-                .headlineMedium
-                .copy(
-                    fontSize = 26.sp,
-                    fontWeight = FontWeight.ExtraBold
-                ),
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontSize = 26.sp,
+                fontWeight = FontWeight.ExtraBold
+            ),
             color = Color.White
         )
     }
 }
 
 /**
- * Carte Hero du budget.
+ * Carte Hero affichant le budget restant.
  */
 @Composable
 private fun EcoBudgetOverviewCard(
@@ -441,21 +390,16 @@ private fun EcoBudgetOverviewCard(
     usagePercentage: Int,
     currentMonthLabel: String
 ) {
-
     val animatedProgress by animateFloatAsState(
         targetValue = usageRatio,
-        animationSpec = spring(
-            stiffness = 300f
-        ),
+        animationSpec = spring(stiffness = 300f),
         label = "budget_progress"
     )
 
     val formatFcfa = remember {
-        val nf = NumberFormat.getNumberInstance(
-            Locale.FRENCH
-        )
-        nf.maximumFractionDigits = 0
-        nf
+        NumberFormat.getNumberInstance(Locale.FRENCH).apply {
+            maximumFractionDigits = 0
+        }
     }
 
     Surface(
@@ -464,8 +408,7 @@ private fun EcoBudgetOverviewCard(
             .clip(RoundedCornerShape(24.dp))
             .border(
                 width = 1.dp,
-                color = Color(0xFF7C3AED)
-                    .copy(alpha = 0.5f),
+                color = Color(0xFF7C3AED).copy(alpha = 0.5f),
                 shape = RoundedCornerShape(24.dp)
             )
             .testTag("budget_overview_card"),
@@ -473,79 +416,56 @@ private fun EcoBudgetOverviewCard(
         shape = RoundedCornerShape(24.dp),
         tonalElevation = 4.dp
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(22.dp)
         ) {
-
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.SpaceBetween,
-                verticalAlignment =
-                    Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Text(
                     text = stringResource(
                         R.string.budget_remaining_title
                     ),
-                    style = MaterialTheme
-                        .typography
-                        .labelSmall
-                        .copy(
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        ),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp
+                    ),
                     color = Color(0xFFEDE9FE)
                 )
 
                 Text(
                     text = currentMonthLabel,
-                    style = MaterialTheme
-                        .typography
-                        .labelSmall
-                        .copy(
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Medium
-                        ),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
                     color = Color(0xFFDDD6FE)
                 )
             }
 
-            Spacer(
-                modifier = Modifier.height(6.dp)
-            )
+            Spacer(modifier = Modifier.height(6.dp))
 
             Row(
-                verticalAlignment =
-                    Alignment.Bottom,
+                verticalAlignment = Alignment.Bottom,
                 modifier = Modifier.testTag(
                     "remaining_budget_text"
                 )
             ) {
-
                 Text(
-                    text = formatFcfa.format(
-                        remainingBudget
+                    text = formatFcfa.format(remainingBudget),
+                    style = MaterialTheme.typography.displayMedium.copy(
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.ExtraBold
                     ),
-                    style = MaterialTheme
-                        .typography
-                        .displayMedium
-                        .copy(
-                            fontSize = 36.sp,
-                            fontWeight =
-                                FontWeight.ExtraBold
-                        ),
                     color = Color.White
                 )
 
-                Spacer(
-                    modifier = Modifier.width(6.dp)
-                )
+                Spacer(modifier = Modifier.width(6.dp))
 
                 Text(
                     text = stringResource(
@@ -554,60 +474,47 @@ private fun EcoBudgetOverviewCard(
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFEDE9FE),
-                    modifier = Modifier.padding(
-                        bottom = 4.dp
-                    )
+                    modifier = Modifier.padding(bottom = 4.dp)
                 )
             }
 
-            Spacer(
-                modifier = Modifier.height(14.dp)
-            )
+            Spacer(modifier = Modifier.height(14.dp))
 
+            // Barre de progression
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(CircleShape)
-                    .background(
-                        Color(0xFF3B1578)
-                    )
+                    .background(Color(0xFF3B1578))
             ) {
-
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth(animatedProgress)
+                        .fillMaxWidth(
+                            animatedProgress.coerceIn(0f, 1f)
+                        )
                         .height(8.dp)
                         .clip(CircleShape)
                         .background(Color.White)
                 )
             }
 
-            Spacer(
-                modifier = Modifier.height(12.dp)
-            )
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement =
-                    Arrangement.SpaceBetween,
-                verticalAlignment =
-                    Alignment.CenterVertically
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-
                 Text(
                     text = stringResource(
                         R.string.total_spent_format,
                         formatFcfa.format(totalSpent)
                     ),
-                    style = MaterialTheme
-                        .typography
-                        .bodySmall
-                        .copy(
-                            fontSize = 12.sp,
-                            fontWeight =
-                                FontWeight.Medium
-                        ),
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Medium
+                    ),
                     color = Color(0xFFEDE9FE),
                     modifier = Modifier.testTag(
                         "total_spent_text"
@@ -619,13 +526,10 @@ private fun EcoBudgetOverviewCard(
                         R.string.budget_usage_percent_format,
                         usagePercentage
                     ),
-                    style = MaterialTheme
-                        .typography
-                        .labelSmall
-                        .copy(
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    ),
                     color = Color.White
                 )
             }
@@ -634,7 +538,7 @@ private fun EcoBudgetOverviewCard(
 }
 
 /**
- * Filtre multi-catégories.
+ * Rangée horizontale de filtres multicatégories.
  */
 @Composable
 private fun CategoryMultiFilterLazyRow(
@@ -643,23 +547,17 @@ private fun CategoryMultiFilterLazyRow(
     onSelectAll: () -> Unit,
     onToggleCategory: (Category) -> Unit
 ) {
-
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 2.dp),
-        horizontalArrangement =
-            Arrangement.spacedBy(10.dp),
-        contentPadding =
-            PaddingValues(horizontal = 2.dp)
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(horizontal = 2.dp)
     ) {
-
+        // Filtre "Tous"
         item(key = "filter_chip_all") {
-
             FilterCategoryChip(
-                label = stringResource(
-                    R.string.filter_all
-                ),
+                label = stringResource(R.string.filter_all),
                 emoji = "✨",
                 isSelected = isAllSelected,
                 isMultiSelect = false,
@@ -668,17 +566,16 @@ private fun CategoryMultiFilterLazyRow(
             )
         }
 
+        // Filtres des catégories
         items(
             items = Category.entries.toTypedArray(),
             key = { "filter_chip_${it.name}" }
         ) { category ->
-
-            // CORRECTION : displayName au lieu de labelResId
-            val label = category.displayName
+            // CORRECTION : utilisation de category.label
+            val label = category.label
 
             val isSelected =
-                !isAllSelected &&
-                        selectedCategories.contains(category)
+                !isAllSelected && selectedCategories.contains(category)
 
             FilterCategoryChip(
                 label = label,
@@ -688,15 +585,14 @@ private fun CategoryMultiFilterLazyRow(
                 onClick = {
                     onToggleCategory(category)
                 },
-                testTag =
-                    "filter_chip_${category.name.lowercase()}"
+                testTag = "filter_chip_${category.name.lowercase()}"
             )
         }
     }
 }
 
 /**
- * Puce interactive de catégorie.
+ * Puce interactive de filtrage.
  */
 @Composable
 private fun FilterCategoryChip(
@@ -707,30 +603,18 @@ private fun FilterCategoryChip(
     onClick: () -> Unit,
     testTag: String
 ) {
-
     val backgroundColor =
-        if (isSelected)
-            VioletPrimary
-        else
-            DarkSurfaceVariant
+        if (isSelected) VioletPrimary else DarkSurfaceVariant
 
     val contentColor =
-        if (isSelected)
-            Color.White
-        else
-            Color(0xFFE2E2EC)
+        if (isSelected) Color.White else Color(0xFFE2E2EC)
 
     val borderColor =
-        if (isSelected)
-            VioletPrimaryLight
-        else
-            DarkOutline
+        if (isSelected) VioletPrimaryLight else DarkOutline
 
     Box(
         modifier = Modifier
-            .clip(
-                RoundedCornerShape(100.dp)
-            )
+            .clip(RoundedCornerShape(100.dp))
             .background(backgroundColor)
             .border(
                 width = 1.dp,
@@ -738,10 +622,9 @@ private fun FilterCategoryChip(
                 shape = RoundedCornerShape(100.dp)
             )
             .clickable(
-                interactionSource =
-                    remember {
-                        MutableInteractionSource()
-                    },
+                interactionSource = remember {
+                    MutableInteractionSource()
+                },
                 indication = null,
                 onClick = onClick
             )
@@ -750,17 +633,12 @@ private fun FilterCategoryChip(
                 vertical = 9.dp
             )
             .testTag(testTag),
-        contentAlignment =
-            Alignment.Center
+        contentAlignment = Alignment.Center
     ) {
-
         Row(
-            verticalAlignment =
-                Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.spacedBy(6.dp)
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-
             Text(
                 text = emoji,
                 fontSize = 15.sp
@@ -768,28 +646,23 @@ private fun FilterCategoryChip(
 
             Text(
                 text = label,
-                style = MaterialTheme
-                    .typography
-                    .bodyMedium
-                    .copy(
-                        fontSize = 13.sp,
-                        fontWeight =
-                            if (isSelected)
-                                FontWeight.Bold
-                            else
-                                FontWeight.Medium
-                    ),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 13.sp,
+                    fontWeight = if (isSelected) {
+                        FontWeight.Bold
+                    } else {
+                        FontWeight.Medium
+                    }
+                ),
                 color = contentColor
             )
 
             if (isSelected && isMultiSelect) {
-
                 Icon(
                     imageVector = Icons.Default.Check,
-                    contentDescription =
-                        stringResource(
-                            R.string.content_desc_selected
-                        ),
+                    contentDescription = stringResource(
+                        R.string.content_desc_selected
+                    ),
                     tint = Color.White,
                     modifier = Modifier.size(14.dp)
                 )
@@ -799,37 +672,30 @@ private fun FilterCategoryChip(
 }
 
 /**
- * Vue affichée lorsqu'aucune transaction ne correspond.
+ * Vue affichée lorsqu'aucune transaction ne correspond au filtre.
  */
 @Composable
 private fun EmptyTransactionsView(
     isAllSelected: Boolean,
     monthLabel: String
 ) {
-
     Surface(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 32.dp),
         color = Color.Transparent
     ) {
-
         Column(
             modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment =
-                Alignment.CenterHorizontally,
-            verticalArrangement =
-                Arrangement.Center
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-
             Text(
                 text = "🌿",
                 fontSize = 44.sp
             )
 
-            Spacer(
-                modifier = Modifier.height(14.dp)
-            )
+            Spacer(modifier = Modifier.height(14.dp))
 
             Text(
                 text = if (isAllSelected) {
@@ -843,31 +709,22 @@ private fun EmptyTransactionsView(
                         monthLabel
                     )
                 },
-                style = MaterialTheme
-                    .typography
-                    .titleMedium
-                    .copy(
-                        fontSize = 16.sp,
-                        fontWeight =
-                            FontWeight.SemiBold
-                    ),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
                 color = Color.White
             )
 
-            Spacer(
-                modifier = Modifier.height(6.dp)
-            )
+            Spacer(modifier = Modifier.height(6.dp))
 
             Text(
                 text = stringResource(
                     R.string.empty_expenses_hint
                 ),
-                style = MaterialTheme
-                    .typography
-                    .bodyMedium
-                    .copy(
-                        fontSize = 13.sp
-                    ),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 13.sp
+                ),
                 color = DarkTextSecondary
             )
         }
