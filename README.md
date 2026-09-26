@@ -3,7 +3,7 @@ Dépôt de base pour le projet du cours de développement mobile avancé.
 
 ## Migration Kotlin Multiplatform (KMP)
 
-Ce document détaille la synthès technique de la migration de l'application **EcoBudget** d'une architecture Android native classique vers une architecture **Kotlin Multiplatform (KMP)**.
+Ce document détaille la synthèse technique de la migration de l'application **EcoBudget** d'une architecture Android native classique vers une architecture **Kotlin Multiplatform (KMP)**.
 
 ---
 
