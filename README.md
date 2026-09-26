@@ -118,8 +118,8 @@ et après sa migration vers Kotlin Multiplatform (KMP). Les deux captures
 permettent d'illustrer la conservation du fonctionnement de l'application tout
 en mettant en évidence l'évolution de son architecture technique.
 
-### 6.1 État de l'application avant migration vers Kotlin Multiplatform (KMP)
+### 6.1 État de l'application EcoBudget avant Migration vers Kotlin Multiplatform (KMP)
 ![écranAvantMigrationKMP](capture_ecran/avantMigrationKMP.png)
 
-### 6.2 État de l'application après migration vers Kotlin Multiplatform (KMP)
+### 6.2 État de l'application EcoBudget après migration vers Kotlin Multiplatform (KMP)
 ![écranApresMigrationKMP](capture_ecran/apresMigrationKMP.png)
