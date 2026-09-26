@@ -111,9 +111,15 @@ Chaque composant migré vers `commonMain` a fait l'objet d'un audit et d'un refa
 
 ---
 
-## 5. Captures d'écran
-### Écran avant migration KMP
+## 6. Comparaison avant et après migration
+
+Cette section présente une comparaison visuelle de l'application EcoBudget avant
+et après sa migration vers Kotlin Multiplatform (KMP). Les deux captures
+permettent d'illustrer la conservation du fonctionnement de l'application tout
+en mettant en évidence l'évolution de son architecture technique.
+
+### 6.1 État de l'application avant migration vers Kotlin Multiplatform (KMP)
 ![écranAvantMigrationKMP](capture_ecran/avantMigrationKMP.png)
 
-### Écran après migration KMP
+### 6.2 État de l'application après migration vers Kotlin Multiplatform (KMP)
 ![écranApresMigrationKMP](capture_ecran/apresMigrationKMP.png)
