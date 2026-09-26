@@ -108,3 +108,12 @@ Chaque composant migré vers `commonMain` a fait l'objet d'un audit et d'un refa
 * **Isolation Métier (100 %) :** L'intégralité du calcul des budgets (Solde, Total Revenus, Total Dépenses), des règles de filtrage mensuel et du stockage en mémoire réside exclusivement dans `:shared:commonMain`.
 * **Absence de régression :** L'application Android native conserve son interface d'origine (Jetpack Compose) tout en consommant de manière transparente les données et le ViewModel issus du module partagé `:shared`.
 * **Préparation iOS :** Le module `:shared` compile avec succès pour les cibles iOS (`iosX64`, `iosArm64`, `iosSimulatorArm64`), produisant un framework statique directement intégrable dans un projet Xcode.
+
+---
+
+## 5. Captures d'écran
+### Écran avant migration KMP
+![écranAvantMigrationKMP](capture_ecran/avantMigrationKMP.png)
+
+### Écran après migration KMP
+![écranApresMigrationKMP](capture_ecran/apresMigrationKMP.png)
